@@ -4,22 +4,9 @@ const path = require('path');
 const http = require('http');
 const socketIO = require('socket.io');
 const wppconnect = require('@wppconnect-team/wppconnect');
+const puppeteer = require('puppeteer'); // ✅ NUEVO
 const cors = require('cors');
 const axios = require('axios');
-
-
-wppconnect.create({
-  browserArgs: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-accelerated-2d-canvas',
-    '--no-first-run',
-    '--no-zygote',
-    '--disable-gpu'
-  ],
-  executablePath: '/usr/bin/chromium' // también puede ser '/nix/store/...chromium.../bin/chromium' si no funciona este
-});
 
 const app = express();
 const server = http.createServer(app);
@@ -102,10 +89,20 @@ io.on('connection', (socket) => {
             }
         });
 
-
         wppconnect
             .create({
                 session: 'default',
+                browserArgs: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--single-process',
+                    '--disable-gpu'
+                ],
+                executablePath: puppeteer.executablePath(), // ✅ Uso de Chromium embebido
                 catchQR: (qr) => {
                     console.log('QR recibido en catchQR:', qr.slice(0, 100));
                     if (qr.startsWith('data:image')) {
