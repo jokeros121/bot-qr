@@ -7,6 +7,20 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const cors = require('cors');
 const axios = require('axios');
 
+
+wppconnect.create({
+  browserArgs: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-accelerated-2d-canvas',
+    '--no-first-run',
+    '--no-zygote',
+    '--disable-gpu'
+  ],
+  executablePath: '/usr/bin/chromium' // también puede ser '/nix/store/...chromium.../bin/chromium' si no funciona este
+});
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
