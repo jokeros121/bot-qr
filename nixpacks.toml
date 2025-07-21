@@ -8,7 +8,7 @@ nixPkgs = [
   "libatk-bridge",
   "libcups",
   "libgbm",
-  "libasound",
+  "alsa-lib",
   "libxss",
   "libgtk3",
   "libxshmfence",
