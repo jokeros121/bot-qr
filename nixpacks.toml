@@ -1,22 +1,16 @@
-[phases.setup]
-nixPkgs = [
-  "chromium",
-  "nodejs_18",
-  "npm",
-  "libnss3",
-  "libatk",
-  "libatk-bridge",
-  "libcups",
-  "libgbm",
+[build]
+nixpkgs = [
   "alsa-lib",
-  "libxss",
-  "libgtk3",
+  "chromium",
+  "atk",
+  "atk-bridge",
+  "cups",
+  "libgbm",
+  "glu",
+  "gtk3",
+  "nss",
   "libxshmfence",
-  "libglu"
+  "libXScrnSaver",
+  "nodejs_18",
+  "npm"
 ]
-
-[phases.build]
-cmds = ["npm install"]
-
-[start]
-cmd = "node app.js"
