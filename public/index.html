@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Bot de WhatsApp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .btn-transition {
+      transition: all 0.3s ease;
+    }
+    .btn-scale:hover {
+      transform: scale(1.05);
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .rotate {
+      animation: rotate 2s linear infinite;
+    }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6 fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+      <div class="flex items-center mb-4 md:mb-0">
+        <div class="bg-green-100 p-3 rounded-lg mr-4">
+          <i class="fas fa-robot text-green-600 text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Panel de Control del Bot WhatsApp</h1>
+          <p class="text-gray-600">Gestiona la conexión de tu bot de mensajería</p>
+        </div>
+      </div>
+      <a href="panel.html" class="btn-transition bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center">
+        <i class="fas fa-chart-line mr-2"></i> Ir al Panel Principal
+      </a>
+    </div>
+
+    <!-- Estado del Bot -->
+    <div id="estadoBot" class="flex items-center p-4 mb-6 rounded-lg border border-gray-200 bg-gray-50">
+      <i class="fas fa-circle-notch rotate text-gray-400 mr-3"></i>
+      <span class="text-gray-700">Verificando estado del bot...</span>
+    </div>
+
+    <!-- Controles -->
+    <div class="flex flex-wrap gap-4 mb-8">
+      <button id="btnEncender" class="btn-transition btn-scale flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center justify-center">
+        <i class="fas fa-power-off mr-2"></i> Encender Bot
+      </button>
+      <button id="btnApagar" class="btn-transition btn-scale flex-1 md:flex-none bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg flex items-center justify-center">
+        <i class="fas fa-stop-circle mr-2"></i> Apagar Bot
+      </button>
+    </div>
+
+  
+
+    <!-- Registros de actividad -->
+    <div class="mb-8">
+      <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+        <i class="fas fa-history mr-2 text-purple-600"></i> Registros de Actividad
+      </h3>
+      <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 max-h-60 overflow-y-auto">
+        <ul id="registrosActividad" class="space-y-2">
+          <li class="text-sm text-gray-500 animate-pulse">Cargando registros...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal del QR -->
+  <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+          <i class="fas fa-qrcode mr-2 text-green-600"></i> Escanea el código QR
+        </h3>
+        <button id="closeQrModal" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="text-center">
+        <p class="text-gray-600 mb-4">Abre WhatsApp en tu teléfono y escanea este código</p>
+        <div id="qrContainer" class="flex justify-center mb-4 p-4 bg-white rounded-lg border border-gray-200">
+          <div class="animate-pulse bg-gray-200 w-64 h-64 rounded"></div>
+        </div>
+        <p class="text-sm text-gray-500 flex items-center justify-center">
+          <i class="fas fa-info-circle mr-1"></i> El código QR expira en 30 segundos
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    const estadoBot = document.getElementById('estadoBot');
+    const btnEncender = document.getElementById('btnEncender');
+    const btnApagar = document.getElementById('btnApagar');
+    const qrModal = document.getElementById('qrModal');
+    const qrContainer = document.getElementById('qrContainer');
+    const closeQrModal = document.getElementById('closeQrModal');
+    const mensajesHoy = document.getElementById('mensajesHoy');
+    const usuariosActivos = document.getElementById('usuariosActivos');
+    const tiempoActivo = document.getElementById('tiempoActivo');
+    const registrosActividad = document.getElementById('registrosActividad');
+
+    // Estados
+    let botConectado = false;
+    let tiempoActivoInterval;
+
+    // Actualizar estado visual del bot
+    function actualizarEstadoBot(conectado, mensaje = '') {
+      botConectado = conectado;
+      
+      const icono = conectado 
+        ? '<i class="fas fa-check-circle text-green-500 mr-2"></i>'
+        : '<i class="fas fa-times-circle text-red-500 mr-2"></i>';
+      
+      const clase = conectado 
+        ? 'bg-green-50 border-green-200 text-green-700'
+        : 'bg-red-50 border-red-200 text-red-700';
+      
+      estadoBot.className = `flex items-center p-4 mb-6 rounded-lg border ${clase} fade-in`;
+      estadoBot.innerHTML = `${icono} ${mensaje || (conectado ? 'Bot activo y conectado' : 'Bot desconectado')}`;
+      
+      btnEncender.disabled = conectado;
+      btnApagar.disabled = !conectado;
+    }
+
+    // Actualizar tiempo activo
+    function iniciarContadorTiempo() {
+      let minutos = 0;
+      clearInterval(tiempoActivoInterval);
+      
+      tiempoActivoInterval = setInterval(() => {
+        minutos++;
+        tiempoActivo.textContent = `${minutos} min`;
+      }, 60000);
+    }
+
+    // Agregar registro de actividad
+    function agregarRegistro(mensaje, tipo = 'info') {
+      const iconos = {
+        info: 'fa-info-circle text-blue-500',
+        success: 'fa-check-circle text-green-500',
+        error: 'fa-times-circle text-red-500',
+        warning: 'fa-exclamation-circle text-yellow-500'
+      };
+      
+      const registro = document.createElement('li');
+      registro.className = 'flex items-start fade-in';
+      registro.innerHTML = `
+        <i class="fas ${iconos[tipo]} mt-1 mr-2"></i>
+        <div>
+          <span class="text-gray-700">${mensaje}</span>
+          <span class="text-xs text-gray-400 block">${new Date().toLocaleTimeString()}</span>
+        </div>
+      `;
+      
+      registrosActividad.insertBefore(registro, registrosActividad.firstChild);
+      
+      // Limitar a 50 registros
+      if (registrosActividad.children.length > 50) {
+        registrosActividad.removeChild(registrosActividad.lastChild);
+      }
+    }
+
+    // Eventos de Socket.IO
+    socket.on('connect', () => {
+      agregarRegistro('Conectado al servidor', 'success');
+      socket.emit('solicitar_estado_bot');
+    });
+
+    socket.on('disconnect', () => {
+      agregarRegistro('Desconectado del servidor', 'error');
+      actualizarEstadoBot(false, 'Error de conexión con el servidor');
+    });
+
+    socket.on('bot_estado', (estado) => {
+      if (estado === 'conectado') {
+        actualizarEstadoBot(true);
+        iniciarContadorTiempo();
+        agregarRegistro('Bot conectado a WhatsApp', 'success');
+      } else {
+        actualizarEstadoBot(false);
+        clearInterval(tiempoActivoInterval);
+        agregarRegistro('Bot desconectado de WhatsApp', 'error');
+      }
+    });
+
+    socket.on('qr', (qrData) => {
+      qrContainer.innerHTML = `<img src="${qrData}" alt="QR Code" class="w-64 h-64">`;
+      qrModal.classList.remove('hidden');
+      agregarRegistro('Código QR generado para autenticación', 'warning');
+    });
+
+    socket.on('listo', () => {
+      qrModal.classList.add('hidden');
+      actualizarEstadoBot(true);
+      agregarRegistro('Autenticación exitosa en WhatsApp', 'success');
+    });
+
+    socket.on('estadisticas', (stats) => {
+      mensajesHoy.textContent = stats.mensajesHoy || '0';
+      usuariosActivos.textContent = stats.usuariosActivos || '0';
+    });
+
+    // Eventos de botones
+    btnEncender.addEventListener('click', () => {
+      socket.emit('iniciar_bot');
+      agregarRegistro('Solicitando inicio del bot...', 'info');
+      estadoBot.innerHTML = '<i class="fas fa-circle-notch rotate text-gray-500 mr-2"></i> Iniciando bot...';
+    });
+
+    btnApagar.addEventListener('click', () => {
+      socket.emit('detener_bot');
+      agregarRegistro('Solicitando apagado del bot...', 'info');
+      estadoBot.innerHTML = '<i class="fas fa-circle-notch rotate text-gray-500 mr-2"></i> Deteniendo bot...';
+    });
+
+    closeQrModal.addEventListener('click', () => {
+      qrModal.classList.add('hidden');
+    });
+
+    // Cerrar modal al hacer clic fuera
+    qrModal.addEventListener('click', (e) => {
+      if (e.target === qrModal) {
+        qrModal.classList.add('hidden');
+      }
+    });
+
+    // Cargar datos iniciales
+    agregarRegistro('Sistema iniciado, conectando...', 'info');
+    socket.emit('solicitar_estadisticas');
+  </script>
+</body>
+</html>

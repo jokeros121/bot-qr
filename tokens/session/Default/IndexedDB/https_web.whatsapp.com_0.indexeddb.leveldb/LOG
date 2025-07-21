@@ -1,0 +1,11 @@
+2025/07/20-19:14:08.030 52a0 Reusing MANIFEST C:\Users\yatra\OneDrive\Desktop\bot\tokens\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/20-19:14:08.031 52a0 Recovering log #707
+2025/07/20-19:14:08.120 52a0 Reusing old log C:\Users\yatra\OneDrive\Desktop\bot\tokens\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000707.log 
+2025/07/20-19:14:09.521 3864 Level-0 table #713: started
+2025/07/20-19:14:09.559 3864 Level-0 table #713: 564063 bytes OK
+2025/07/20-19:14:09.563 3864 Delete type=0 #707
+2025/07/20-19:14:09.564 52a0 Manual compaction at level-0 from '\x00\xeb\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xec\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/20-19:14:13.917 3ab4 Compacting 1@1 + 1@2 files
+2025/07/20-19:14:14.030 3ab4 Generated table #714@1: 18633 keys, 645745 bytes
+2025/07/20-19:14:14.030 3ab4 Compacted 1@1 + 1@2 files => 645745 bytes
+2025/07/20-19:14:14.033 3ab4 compacted to: files[ 0 0 1 0 0 0 0 ]

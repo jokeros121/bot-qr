@@ -1,0 +1,15 @@
+2025/07/20-18:08:59.741 22e8 Reusing MANIFEST C:\Users\yatra\OneDrive\Desktop\bot\tokens\session\Default\Local Storage\leveldb/MANIFEST-000001
+2025/07/20-18:08:59.754 22e8 Recovering log #16
+2025/07/20-18:08:59.767 22e8 Reusing old log C:\Users\yatra\OneDrive\Desktop\bot\tokens\session\Default\Local Storage\leveldb/000016.log 
+2025/07/20-18:11:00.412 33ec Level-0 table #20: started
+2025/07/20-18:11:00.421 33ec Level-0 table #20: 17953 bytes OK
+2025/07/20-18:11:00.425 33ec Delete type=0 #16
+2025/07/20-18:11:00.427 33ec Compacting 4@0 + 1@1 files
+2025/07/20-18:11:00.441 33ec Generated table #21@0: 154 keys, 9284 bytes
+2025/07/20-18:11:00.441 33ec Compacted 4@0 + 1@1 files => 9284 bytes
+2025/07/20-18:11:00.443 33ec compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/07/20-18:11:00.446 33ec Delete type=2 #8
+2025/07/20-18:11:00.446 33ec Delete type=2 #11
+2025/07/20-18:11:00.446 33ec Delete type=2 #13
+2025/07/20-18:11:00.446 33ec Delete type=2 #17
+2025/07/20-18:11:00.446 33ec Delete type=2 #20
